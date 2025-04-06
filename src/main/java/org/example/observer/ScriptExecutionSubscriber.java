@@ -1,5 +1,7 @@
 package org.example.observer;
 
+import org.example.model.LinkedError;
+
 public interface ScriptExecutionSubscriber extends Subscriber {
     /**
      * This method shows output from the executed script
@@ -12,6 +14,12 @@ public interface ScriptExecutionSubscriber extends Subscriber {
      * @param error the error to be shown
      */
     void showError(String error);
+
+    /**
+     * This method shows error which is linked to the input
+     * @param error the error to be shown
+     */
+    void showLinkedError(LinkedError error);
 
     /**
      * This method shows the execution status

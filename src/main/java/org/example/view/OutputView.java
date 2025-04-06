@@ -1,6 +1,7 @@
 package org.example.view;
 
 import lombok.Getter;
+import org.example.model.LinkedError;
 import org.example.observer.Publisher;
 import org.example.observer.ScriptExecutionSubscriber;
 import org.example.observer.notification.Notification;
@@ -48,6 +49,28 @@ public class OutputView extends JPanel implements ScriptExecutionSubscriber {
                 Document document = outputTextPane.getDocument();
                 StyledDocument styledDocument = outputTextPane.getStyledDocument();
                 styledDocument.insertString(document.getLength(), error + "\n", errorAttributeSet);
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Override
+    public void showLinkedError(LinkedError error) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Document document = outputTextPane.getDocument();
+                StyledDocument styledDocument = outputTextPane.getStyledDocument();
+
+                Style clickable = styledDocument.addStyle("clickable", StyleContext.getDefaultStyleContext()
+                        .getStyle(StyleContext.DEFAULT_STYLE));
+                StyleConstants.setForeground(clickable, Color.BLUE);
+                StyleConstants.setUnderline(clickable, true);
+                clickable.addAttribute("line", error.getLineNumber());
+
+                styledDocument.insertString(document.getLength(), error.getPreLinkPart(), errorAttributeSet);
+                styledDocument.insertString(document.getLength(), error.getLinkPart(), clickable);
+                styledDocument.insertString(document.getLength(), error.getPostLinkPart() + "\n", errorAttributeSet);
             } catch (BadLocationException e) {
                 throw new RuntimeException(e);
             }

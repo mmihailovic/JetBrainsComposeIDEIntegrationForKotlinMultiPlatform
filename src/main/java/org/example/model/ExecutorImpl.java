@@ -75,7 +75,39 @@ public class ExecutorImpl implements Executor {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
             while ((line = reader.readLine()) != null) {
-                notifySubscribers(new ShowErrorNotification(line));
+                int start = line.indexOf("script.kts:");
+                if(start < 0) {
+                    notifySubscribers(new ShowErrorNotification(line));
+                    continue;
+                }
+
+                int startOfLineNumber = start + SCRIPT_NAME.length() + 1;
+                int lineNumber = 0;
+                int i;
+
+                for(i = startOfLineNumber; i < line.length(); i++) {
+                    if(!Character.isDigit(line.charAt(i))) {
+                        break;
+                    }
+                    lineNumber = lineNumber * 10 + line.charAt(i) - '0';
+                }
+
+                String preLinkPart = line.substring(0, start);
+                String linkPart;
+                String postLinkPart;
+
+                if(line.charAt(i) == ')') {
+                    linkPart = line.substring(start, i);
+                    postLinkPart = line.substring(i);
+                }
+                else {
+                    int endOfLinkPart = line.indexOf(':', i + 1);
+                    linkPart = line.substring(start, endOfLinkPart);
+                    postLinkPart = line.substring(endOfLinkPart);
+                }
+
+                LinkedError linkedError = new LinkedError(preLinkPart, linkPart, postLinkPart, lineNumber);
+                notifySubscribers(new ShowLinkedErrorNotification(linkedError));
             }
         } catch (IOException e) {
             e.printStackTrace();
