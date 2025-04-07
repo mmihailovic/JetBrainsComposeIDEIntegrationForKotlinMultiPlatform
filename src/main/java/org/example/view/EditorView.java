@@ -12,34 +12,59 @@ import java.awt.*;
 
 @Getter
 public class EditorView extends JPanel implements ScriptInputSubscriber {
+    private static final String SCRIPT_NAME = "script.kts";
     private final JButton executeButton = new JButton("Execute");
-    private final JTextPane codeTextPane = new JTextPane();
+    private final JTabbedPane jTabbedPane;
     private final SimpleAttributeSet highlightAttributeSet = new SimpleAttributeSet();
+    private final ScrollablePane scrollablePane;
 
     public EditorView(Publisher publisher) {
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.add(executeButton);
+        this.jTabbedPane = new JTabbedPane();
+        this.scrollablePane = new ScrollablePane(new JTextPane(), SCRIPT_NAME, true);
+        this.jTabbedPane.addTab(SCRIPT_NAME, scrollablePane);
+        this.add(jTabbedPane);
+        this.styleComponents();
+        publisher.addSubscriber(this);
+    }
+
+    private void styleComponents() {
+        this.setBackground(new Color(43, 45, 48));
+        this.jTabbedPane.setAlignmentX(LEFT_ALIGNMENT);
+        this.executeButton.setAlignmentX(LEFT_ALIGNMENT);
         StyleConstants.setForeground(highlightAttributeSet, new Color(206, 141, 109));
         StyleConstants.setBold(highlightAttributeSet, true);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        executeButton.setAlignmentX(LEFT_ALIGNMENT);
-        CustomScrollPane scrollPane = new CustomScrollPane(codeTextPane);
-        scrollPane.setAlignmentX(LEFT_ALIGNMENT);
-        this.add(executeButton);
-        this.add(scrollPane);
-        codeTextPane.setBackground(new Color(30,31,34));
-        codeTextPane.setCaretColor(new Color(215, 223, 227));
-        codeTextPane.setForeground(new Color(215, 223, 227));
-        this.setBackground(new Color(43, 45, 48));
-        publisher.addSubscriber(this);
     }
 
     @Override
     public void highlightKeywords(int start, int end) {
-        SwingUtilities.invokeLater(() -> codeTextPane.getStyledDocument().setCharacterAttributes(start, end - start,
-                highlightAttributeSet, false));
+        SwingUtilities.invokeLater(() -> scrollablePane.getTextPane().getStyledDocument()
+                .setCharacterAttributes(start, end - start, highlightAttributeSet, false));
     }
 
     @Override
     public void update(Notification notification) {
         notification.handleNotification(this);
+    }
+
+    public void addTab(String className, String code, Integer line) {
+        ScrollablePane scrollablePane = new ScrollablePane(new JTextPane(), className, false);
+        scrollablePane.getTextPane().setText(code);
+        jTabbedPane.addTab(className, scrollablePane);
+        jTabbedPane.setSelectedComponent(scrollablePane);
+        int lineStartOffset = scrollablePane.getTextPane().getStyledDocument().getDefaultRootElement()
+                    .getElement(line).getStartOffset();
+        scrollablePane.getTextPane().setCaretPosition(lineStartOffset);
+        scrollablePane.getTextPane().requestFocus();
+    }
+
+    public void showCodePane(Integer line) {
+        JTextPane codePane = scrollablePane.getTextPane();
+        int lineStartOffset = codePane.getStyledDocument().getDefaultRootElement()
+                .getElement(line - 1).getStartOffset();
+        jTabbedPane.setSelectedComponent(scrollablePane);
+        codePane.setCaretPosition(lineStartOffset);
+        codePane.requestFocus();
     }
 }

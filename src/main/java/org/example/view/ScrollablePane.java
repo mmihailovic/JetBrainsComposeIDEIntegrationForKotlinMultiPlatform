@@ -1,17 +1,27 @@
 package org.example.view;
 
+import lombok.Getter;
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
+import java.util.Objects;
 
-public class CustomScrollPane extends JScrollPane {
+@Getter
+public class ScrollablePane extends JScrollPane {
+    private final String className;
+    private final JTextPane textPane;
 
-    public CustomScrollPane(JTextPane jTextPane) {
-        super(jTextPane);
-        styleScrollBar(this.getVerticalScrollBar());
-        styleScrollBar(this.getHorizontalScrollBar());
-        setBorder(new LineBorder(new Color(30, 31, 34)));
+    public ScrollablePane(JTextPane textPane, String className, boolean editable) {
+        this.className = className;
+        this.setViewportView(textPane);
+        this.textPane = textPane;
+        this.textPane.setEditable(editable);
+        this.styleCodePane();
+        this.styleScrollBar(this.getVerticalScrollBar());
+        this.styleScrollBar(this.getHorizontalScrollBar());
+        this.setBorder(new LineBorder(new Color(30, 31, 34)));
     }
 
     private void styleScrollBar(JScrollBar scrollBar) {
@@ -41,5 +51,24 @@ public class CustomScrollPane extends JScrollPane {
                 return button;
             }
         });
+    }
+
+    private void styleCodePane() {
+        textPane.setBackground(new Color(30,31,34));
+        textPane.setCaretColor(new Color(215, 223, 227));
+        textPane.setForeground(new Color(215, 223, 227));
+        textPane.getCaret().setVisible(true);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ScrollablePane that = (ScrollablePane) o;
+        return Objects.equals(className, that.className);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(className);
     }
 }

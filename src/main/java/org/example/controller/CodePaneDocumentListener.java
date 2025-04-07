@@ -39,7 +39,7 @@ public class CodePaneDocumentListener implements DocumentListener {
 
     private void clearAttributes() {
         SwingUtilities.invokeLater(() -> {
-            StyledDocument styledDocument = editorView.getCodeTextPane().getStyledDocument();
+            StyledDocument styledDocument = editorView.getScrollablePane().getTextPane().getStyledDocument();
             styledDocument.setCharacterAttributes(0, styledDocument.getLength(), attributeSet, true);
         });
     }
@@ -48,7 +48,7 @@ public class CodePaneDocumentListener implements DocumentListener {
         new SwingWorker<>() {
             @Override
             protected Object doInBackground() throws Exception {
-                executor.findKeywords(editorView.getCodeTextPane().getText());
+                executor.findKeywords(editorView.getScrollablePane().getTextPane().getText());
                 return null;
             }
         }.execute();

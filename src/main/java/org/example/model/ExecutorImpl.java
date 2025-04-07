@@ -80,44 +80,78 @@ public class ExecutorImpl implements Executor {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
             while ((line = reader.readLine()) != null) {
-                int start = line.indexOf("script.kts:");
-                if(start < 0) {
+                // standard errors
+                if(!line.contains(SCRIPT_NAME) && !line.contains("at")) {
                     notifySubscribers(new ShowErrorNotification(line));
                     continue;
                 }
 
-                int startOfLineNumber = start + SCRIPT_NAME.length() + 1;
-                int lineNumber = 0;
-                int i;
+                int start = line.indexOf(SCRIPT_NAME + ":");
 
-                for(i = startOfLineNumber; i < line.length(); i++) {
-                    if(!Character.isDigit(line.charAt(i))) {
-                        break;
-                    }
-                    lineNumber = lineNumber * 10 + line.charAt(i) - '0';
+                // errors in java classes
+                if(start < 0) {
+                    findJavaClassesErrors(line);
+                    continue;
                 }
 
-                String preLinkPart = line.substring(0, start);
-                String linkPart;
-                String postLinkPart;
-
-                if(line.charAt(i) == ')') {
-                    linkPart = line.substring(start, i);
-                    postLinkPart = line.substring(i);
-                }
-                else {
-                    int endOfLinkPart = line.indexOf(':', i + 1);
-                    linkPart = line.substring(start, endOfLinkPart);
-                    postLinkPart = line.substring(endOfLinkPart);
-                }
-
-                LinkedError linkedError = new LinkedError(preLinkPart, linkPart, postLinkPart, lineNumber);
-                notifySubscribers(new ShowLinkedErrorNotification(linkedError));
+                // errors in script
+                findScriptErrors(line, start);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    private void findJavaClassesErrors(String line) {
+        String[] errorParts = line.split("[\\(\\s]");
+        if(errorParts[1].equals("at")) {
+            int index = line.indexOf("(");
+            String preLinkPart = line.substring(0, index + 1);
+            String linkPart = line.substring(index + 1, line.length() - 1);
+            Integer lineNumber = Integer.parseInt(linkPart.split(":")[1]);
+            String postLinkPart = line.substring(line.length() - 1);
+
+            String fullPackageName = errorParts[2].substring(0, errorParts[2].lastIndexOf('.'));
+            notifySubscribers(new ShowLinkedErrorNotification(new LinkedError(preLinkPart, linkPart, postLinkPart, lineNumber, fullPackageName)));
+        }
+        else {
+            String preLinkPart = "";
+            String linkPart = line.substring(0, line.indexOf(':'));
+            String postLinkPart = line.substring(line.indexOf(':'));
+            notifySubscribers(new ShowLinkedErrorNotification(new LinkedError(preLinkPart, linkPart, postLinkPart, 1, linkPart)));
+        }
+    }
+
+    private void findScriptErrors(String line, int start) {
+        int startOfLineNumber = start + SCRIPT_NAME.length() + 1;
+        int lineNumber = 0;
+        int i;
+
+        for(i = startOfLineNumber; i < line.length(); i++) {
+            if(!Character.isDigit(line.charAt(i))) {
+                break;
+            }
+            lineNumber = lineNumber * 10 + line.charAt(i) - '0';
+        }
+
+        String preLinkPart = line.substring(0, start);
+        String linkPart;
+        String postLinkPart;
+
+        if(line.charAt(i) == ')') {
+            linkPart = line.substring(start, i);
+            postLinkPart = line.substring(i);
+        }
+        else {
+            int endOfLinkPart = line.indexOf(':', i + 1);
+            linkPart = line.substring(start, endOfLinkPart);
+            postLinkPart = line.substring(endOfLinkPart);
+        }
+
+        LinkedError linkedError = new LinkedError(preLinkPart, linkPart, postLinkPart, lineNumber, SCRIPT_NAME);
+        notifySubscribers(new ShowLinkedErrorNotification(linkedError));
+    }
+
 
     @Override
     public void addSubscriber(Subscriber subscriber) {

@@ -21,17 +21,20 @@ public class OutputView extends JPanel implements ScriptExecutionSubscriber {
     public OutputView(Publisher publisher, EditorView editorView) {
         this.editorView = editorView;
         this.setLayout(new BorderLayout());
-        this.outputTextPane.setEditable(false);
+        this.outputTextPane.addMouseListener(new OutputTextPaneMouseListener(editorView));
+        this.add(statusLabel, BorderLayout.NORTH);
+        this.add(new ScrollablePane(outputTextPane, "script.kts", false), BorderLayout.CENTER);
+        styleComponents();
+        publisher.addSubscriber(this);
+    }
+
+    private void styleComponents() {
         this.statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
         this.setBackground(new Color(43, 45, 48));
-        this.outputTextPane.setForeground(new Color(215, 223, 227));
         statusLabel.setForeground(new Color(215, 223, 227));
-        this.outputTextPane.setBackground(new Color(30, 31, 34));
-        CustomScrollPane scrollPane = new CustomScrollPane(outputTextPane);
-        this.add(statusLabel, BorderLayout.NORTH);
-        this.add(scrollPane, BorderLayout.CENTER);
         StyleConstants.setForeground(errorAttributeSet, new Color(217, 83, 92));
-        publisher.addSubscriber(this);
+        this.outputTextPane.getCaret().setVisible(false);
+        this.outputTextPane.setEditable(false);
     }
 
     @Override
@@ -50,6 +53,7 @@ public class OutputView extends JPanel implements ScriptExecutionSubscriber {
     public void showError(String error) {
         SwingUtilities.invokeLater(() -> {
             try {
+
                 Document document = outputTextPane.getDocument();
                 StyledDocument styledDocument = outputTextPane.getStyledDocument();
                 styledDocument.insertString(document.getLength(), error + "\n", errorAttributeSet);
@@ -71,6 +75,7 @@ public class OutputView extends JPanel implements ScriptExecutionSubscriber {
                 StyleConstants.setForeground(clickable, Color.BLUE);
                 StyleConstants.setUnderline(clickable, true);
                 clickable.addAttribute("line", error.getLineNumber());
+                clickable.addAttribute("className", error.getClassName());
 
                 styledDocument.insertString(document.getLength(), error.getPreLinkPart(), errorAttributeSet);
                 styledDocument.insertString(document.getLength(), error.getLinkPart(), clickable);

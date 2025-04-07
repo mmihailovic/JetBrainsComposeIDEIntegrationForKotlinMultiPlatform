@@ -16,13 +16,13 @@ public class ExecutionController {
             new SwingWorker<>() {
                 @Override
                 protected Object doInBackground() throws Exception {
-                    executor.executeScript(editorView.getCodeTextPane().getText());
+                    executor.executeScript(editorView.getScrollablePane().getTextPane().getText());
                     return null;
                 }
             }.execute();
         });
 
-        editorView.getCodeTextPane().getDocument().addDocumentListener(new CodePaneDocumentListener(editorView, executor));
+        editorView.getScrollablePane().getTextPane().getDocument().addDocumentListener(new CodePaneDocumentListener(editorView, executor));
         outputView.getOutputTextPane().addMouseListener(new OutputTextPaneMouseListener(editorView));
     }
 }

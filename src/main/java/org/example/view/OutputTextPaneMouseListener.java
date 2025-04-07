@@ -7,6 +7,13 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.Element;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 
 @AllArgsConstructor
 public class OutputTextPaneMouseListener extends MouseAdapter {
@@ -21,13 +28,31 @@ public class OutputTextPaneMouseListener extends MouseAdapter {
 
         AttributeSet attributeSet = selectedElement.getAttributes();
         Integer line = (Integer) attributeSet.getAttribute("line");
+        String fullPackageName = (String) attributeSet.getAttribute("className");
 
-        if (line != null) {
-            int lineStartOffset = editorView.getCodeTextPane().getStyledDocument().getDefaultRootElement()
-                    .getElement(line - 1).getStartOffset();
+        if(line == null || fullPackageName == null)
+            return;
 
-            editorView.getCodeTextPane().setCaretPosition(lineStartOffset);
-            editorView.getCodeTextPane().requestFocus();
+        if(fullPackageName.equals("script.kts")) {
+            editorView.showCodePane(line);
+            return;
+        }
+
+        String[] classNameParts = fullPackageName.split("/");
+
+        String moduleName = classNameParts[0];
+        String className = classNameParts[1].replace(".", "/");
+
+        HttpClient httpClient = HttpClient.newHttpClient();
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("https://raw.githubusercontent.com/openjdk/jdk/master/src/" + moduleName + "/share/classes/" + className + ".java"))
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            editorView.addTab(className, response.body(), line);
+        } catch (URISyntaxException | InterruptedException | IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

@@ -10,4 +10,5 @@ public class LinkedError {
     private String linkPart;
     private String postLinkPart;
     private Integer lineNumber;
+    private String className;
 }
