@@ -31,14 +31,19 @@ public class ExecutorImpl implements Executor {
                 writer.write(script);
             }
 
-            Process process = processExecutor.executeProcess("cmd", "/c", "kotlinc", "-script", scriptFile.getAbsolutePath());
+            String[] command;
+            if(System.getProperty("os.name").toLowerCase().contains("windows")) {
+                command = new String[] {"cmd", "/c", "kotlinc", "-script", scriptFile.getAbsolutePath()};
+            } else command = new String[] {"kotlinc", "-script", scriptFile.getAbsolutePath()};
+
+            Process process = processExecutor.executeProcess(command);
             new ExecutorSwingWorker(process.getInputStream(), this::readOutput).execute();
             new ExecutorSwingWorker(process.getErrorStream(), this::readErrors).execute();
 
             int exitCode = process.waitFor();
             notifySubscribers(new ShowOutputNotification("Process finished with exit code " + exitCode));
 
-            String status = exitCode == 0 ? "SUCCESS" : "FAILURE";
+            String status = exitCode == 0 ? "Script executed successfully!" : "Error occurred during script execution!";
             notifySubscribers(new ShowStatusNotification(status));
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

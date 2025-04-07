@@ -20,13 +20,17 @@ public class OutputView extends JPanel implements ScriptExecutionSubscriber {
 
     public OutputView(Publisher publisher, EditorView editorView) {
         this.editorView = editorView;
-        StyleConstants.setForeground(errorAttributeSet, new Color(217, 83, 92));
         this.setLayout(new BorderLayout());
-        outputTextPane.setEditable(false);
-        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-        JScrollPane scrollPane = new JScrollPane(outputTextPane);
+        this.outputTextPane.setEditable(false);
+        this.statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        this.setBackground(new Color(43, 45, 48));
+        this.outputTextPane.setForeground(new Color(215, 223, 227));
+        statusLabel.setForeground(new Color(215, 223, 227));
+        this.outputTextPane.setBackground(new Color(30, 31, 34));
+        CustomScrollPane scrollPane = new CustomScrollPane(outputTextPane);
         this.add(statusLabel, BorderLayout.NORTH);
         this.add(scrollPane, BorderLayout.CENTER);
+        StyleConstants.setForeground(errorAttributeSet, new Color(217, 83, 92));
         publisher.addSubscriber(this);
     }
 

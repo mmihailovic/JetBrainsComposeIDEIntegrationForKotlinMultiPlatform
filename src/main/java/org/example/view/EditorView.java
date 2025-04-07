@@ -20,11 +20,15 @@ public class EditorView extends JPanel implements ScriptInputSubscriber {
         StyleConstants.setForeground(highlightAttributeSet, new Color(206, 141, 109));
         StyleConstants.setBold(highlightAttributeSet, true);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        JScrollPane scrollPane = new JScrollPane(codeTextPane);
         executeButton.setAlignmentX(LEFT_ALIGNMENT);
+        CustomScrollPane scrollPane = new CustomScrollPane(codeTextPane);
         scrollPane.setAlignmentX(LEFT_ALIGNMENT);
         this.add(executeButton);
         this.add(scrollPane);
+        codeTextPane.setBackground(new Color(30,31,34));
+        codeTextPane.setCaretColor(new Color(215, 223, 227));
+        codeTextPane.setForeground(new Color(215, 223, 227));
+        this.setBackground(new Color(43, 45, 48));
         publisher.addSubscriber(this);
     }
 
